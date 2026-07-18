@@ -5,13 +5,17 @@ const presets=[
   {id:4,name:'流行演唱',author:'Mira',cat:'音乐',desc:'明亮通透，保留低频力度',likes:215,fav:false,vals:[2,1,0,-1,1,3,4,3,2,1],gain:1}
 ];
 let selected=presets[0],bands=[...selected.vals],masterGain=selected.gain||0;
+let libraryMode='preset',sortMode='default';
 const freqs=['31','62','125','250','500','1K','2K','4K','8K','16K'];
 const $=s=>document.querySelector(s);
 const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)};
 
 function renderList(){
   const q=$('#eqSearch').value.toLowerCase(),f=$('#eqFilter').value;
-  $('#eqList').innerHTML=presets.filter(x=>(x.name+x.author).toLowerCase().includes(q)&&(f==='all'||f==='favorite'&&x.fav||f==='popular'&&x.likes>200||f==='mine'&&x.author==='我')).map(x=>`<article class="eq-item ${x.id===selected.id?'active':''}" data-id="${x.id}"><div class="eq-item-head"><h3>${x.name}</h3><span class="tag">${x.cat}</span></div><p>${x.desc}</p><div class="eq-stats"><span>by ${x.author}</span><span>♡ ${x.likes}</span><span>${x.fav?'★ 已收藏':'☆'}</span></div></article>`).join('')||'<p class="muted">没有匹配的 EQ</p>';
+  const modeMatch=x=>libraryMode==='preset'||libraryMode==='custom'&&x.author==='我'||libraryMode==='online'&&x.author!=='我'&&x.author!=='SonicLab'||libraryMode==='shared'&&x.author==='我';
+  const rows=presets.filter(x=>modeMatch(x)&&(x.name+x.author+x.cat).toLowerCase().includes(q)&&(f==='all'||f==='favorite'&&x.fav||f==='popular'&&x.likes>200||f==='mine'&&x.author==='我'));
+  if(sortMode==='popular')rows.sort((a,b)=>b.likes-a.likes);if(sortMode==='latest')rows.sort((a,b)=>b.id-a.id);if(sortMode==='name')rows.sort((a,b)=>a.name.localeCompare(b.name,'zh-CN'));
+  $('#eqListItems').innerHTML=rows.map(x=>`<article class="eq-item ${x.id===selected.id?'active':''}" data-id="${x.id}"><div class="eq-item-head"><h3>${x.name}</h3><span class="tag">${x.cat}</span></div><p>${x.desc}</p><div class="eq-stats"><span>by ${x.author}</span><span>♡ ${x.likes}</span><span>${x.fav?'★ 已收藏':'☆'}</span></div></article>`).join('')||'<div class="eq-library-empty"><strong>暂无相关 EQ</strong><span>尝试切换分类或搜索其他标题</span></div>';
   document.querySelectorAll('.eq-item').forEach(x=>x.onclick=()=>select(+x.dataset.id));
 }
 
@@ -57,12 +61,18 @@ function syncGain(){const input=$('#eqGain'),out=$('#eqGainValue');if(!input)ret
 
 function installThreeColumnLayout(){
   const layout=$('.eq-layout'),editor=$('.eq-editor'),library=$('.eq-list'),toolbar=$('.toolbar');
+  const pageBack=$('.page-title a.ghost-btn');if(pageBack)pageBack.remove();
   const device=document.createElement('aside');device.className='panel eq-device-panel';device.innerHTML=`<div class="eq-device-visual"><img src="assets/microphone.png" alt="Studio Mic X1"><span class="device-online"><i></i> 已连接</span></div><div class="device-info-title"><span class="eyebrow">DEVICE INFO</span><h2>设备信息</h2></div><dl class="eq-device-specs"><div><dt>设备型号</dt><dd>SMX-01</dd></div><div><dt>产品名称</dt><dd>Studio Mic X1</dd></div><div><dt>产品品牌</dt><dd>SonicLab</dd></div><div><dt>设备厂商</dt><dd>SonicLab Audio</dd></div><div><dt>固件版本</dt><dd>2.4.1</dd></div></dl><a class="ghost-btn eq-back" href="control.html">← 返回设备调试</a>`;
   layout.prepend(device);library.classList.add('eq-library');
   const head=document.createElement('div');head.className='eq-library-head';head.innerHTML=`<div><span class="eyebrow">EQ SOUNDS</span><h2>EQ 音效</h2></div><button class="library-share" id="libraryShare" title="分享当前 EQ">↗</button>`;
-  const tabs=document.createElement('div');tabs.className='eq-library-tabs';tabs.innerHTML='<button class="active">预设</button><button>自定义</button><button>在线</button><button>我的分享</button>';
-  library.prepend(tabs);library.prepend(toolbar);library.prepend(head);
+  const tabs=document.createElement('div');tabs.className='eq-library-tabs';tabs.innerHTML='<button class="active" data-mode="preset">预设</button><button data-mode="custom">自定义</button><button data-mode="online">在线</button><button data-mode="shared">我的分享</button>';
+  const sort=document.createElement('label');sort.className='eq-sort-row';sort.innerHTML='<span>排序：</span><select id="eqSort"><option value="default">默认</option><option value="popular">最受欢迎</option><option value="latest">最新创建</option><option value="name">名称 A–Z</option></select>';
+  const items=document.createElement('div');items.id='eqListItems';items.className='eq-list-items';
+  library.append(items);library.prepend(sort);library.prepend(tabs);library.prepend(toolbar);library.prepend(head);
   toolbar.classList.add('library-toolbar');
+  $('#eqSearch').placeholder='请输入 EQ 标题';
+  tabs.querySelectorAll('button').forEach(button=>button.onclick=()=>{libraryMode=button.dataset.mode;tabs.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));renderList()});
+  $('#eqSort').onchange=e=>{sortMode=e.target.value;renderList()};
   $('#libraryShare').onclick=()=>$('#shareBtn').click();
   const editorLabel=document.createElement('div');editorLabel.className='eq-workbench-label';editorLabel.innerHTML='<span class="eyebrow">PARAMETRIC EQUALIZER</span><strong>频段调节与曲线</strong>';
   editor.prepend(editorLabel);
