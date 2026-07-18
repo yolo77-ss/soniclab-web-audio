@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SonicLab Web 调音台</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="mic-control.css" />
+  <link rel="stylesheet" href="portal.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#"><span class="brand-mark">S</span><span>Sonic<span>Lab</span></span></a>
+      <div class="device-pill"><span class="status-dot"></span><span>当前设备</span><strong>Studio Mic X1</strong><button aria-label="刷新设备">↻</button></div>
+      <nav class="main-nav"><a class="active" href="index.html">设备</a><a href="eq.html">EQ</a><a href="profile.html">个人中心</a></nav><div class="top-actions"><button class="auth-link" data-auth="login">登录</button><button class="register-link" data-auth="register">注册</button><button class="icon-btn" aria-label="帮助">?</button></div>
+    </header>
+
+    <main class="workspace">
+      <section class="showcase">
+        <div class="showcase-copy"><span class="eyebrow">LIVE AUDIO CONSOLE</span><h1>让每一次发声<br><em>清晰、有力。</em></h1><p>为直播、游戏与播客打造的实时声音控制台。</p></div>
+        <div class="mic-stage"><div class="orb orb-one"></div><div class="orb orb-two"></div><img id="micImage" src="assets/microphone.png" alt="RGB 桌面麦克风" /><div class="mic-shadow"></div></div>
+        <div class="recorder" id="recorder">
+          <button id="recordBtn" class="record-btn" aria-label="开始录音"><span></span></button>
+          <div class="record-meta"><strong id="recordLabel">录音测试</strong><small id="recordTime">点击开始 · 最长 30 秒</small></div>
+          <canvas id="waveform" width="420" height="52" aria-label="音频波形"></canvas>
+          <button id="playBtn" class="play-btn" disabled aria-label="播放录音">▶</button>
+        </div>
+      </section>
+
+      <section class="control-panel">
+        <div class="panel-head"><div><span class="eyebrow">DEVICE CONTROL</span><h2>声音控制</h2></div><span class="saved" id="savedState"><i></i>参数已同步</span></div>
+
+        <article class="mic-master" id="micMaster"><div><span class="control-icon">🎙</span><div><h3>麦克风开关</h3><p id="micStatus">麦克风已开启，声音处理功能正常工作</p></div></div><label class="switch"><input id="micSwitch" type="checkbox" checked /><span></span></label></article>
+        <div class="audio-controls" id="audioControls">
+
+        <article class="control-card featured">
+          <div class="control-heading"><span class="control-icon">≋</span><div><h3>降噪强度 <button class="help" title="过滤键盘声与环境底噪">?</button></h3><p>过滤持续背景噪音，保留自然人声细节</p></div><output id="noiseValue">68</output></div>
+          <input class="range" id="noiseRange" type="range" min="0" max="100" value="68" />
+          <div class="scale"><span>自然</span><span>深度</span></div>
+        </article>
+
+        <div class="section-label">声音增强</div>
+        <div class="feature-grid">
+          <article class="toggle-card"><span class="control-icon">◉</span><div><h3>人声增强</h3><p>突出人声，让表达更有存在感</p></div><label class="switch"><input id="voiceSwitch" type="checkbox" checked /><span></span></label></article>
+          <article class="toggle-card"><span class="control-icon">♬</span><div><h3>监听开关</h3><p>实时监听麦克风输入声音</p></div><label class="switch"><input id="monitorSwitch" type="checkbox" /><span></span></label></article>
+        </div>
+
+        <article class="control-card mix-card">
+          <div class="control-heading"><span class="control-icon">⌁</span><div><h3>混响效果</h3><p>为声音增加空间与氛围感</p></div><output id="reverbValue">32%</output></div>
+          <input class="range purple" id="reverbRange" type="range" min="0" max="100" value="32" />
+          <div class="preset-row"><button data-value="0">干声</button><button class="active" data-value="32">房间</button><button data-value="58">舞台</button><button data-value="82">音乐厅</button></div>
+        </article>
+
+        </div><article class="lighting-card">
+          <div class="lighting-head"><div><span class="control-icon">✦</span><div><h3>氛围灯效</h3><p>同步你的桌面风格</p></div></div><label class="switch"><input id="lightSwitch" type="checkbox" checked /><span></span></label></div>
+          <div class="lighting-body"><div class="color-picker" id="colorPicker"><button class="active" data-color="#6c5cff" style="--c:#6c5cff"></button><button data-color="#00d8c7" style="--c:#00d8c7"></button><button data-color="#ff4d8d" style="--c:#ff4d8d"></button><button data-color="#ffb84d" style="--c:#ffb84d"></button><label style="--c:conic-gradient(red,yellow,lime,aqua,blue,magenta,red)"><input id="customColor" type="color" value="#8b5cf6" /></label></div><select id="lightMode"><option>呼吸渐变</option><option>单色常亮</option><option>音频律动</option><option>彩虹循环</option></select></div>
+        </article>
+      </section>
+    </main>
+    <footer><span>SONICLAB AUDIO</span><span>固件版本 2.4.1 · Web Console</span></footer>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+  <script src="portal.js"></script>
+</body>
+</html>
+<script defer src="click-effects.js"></script>
