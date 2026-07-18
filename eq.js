@@ -34,7 +34,9 @@ function roundedPath(g,points){
 }
 
 function draw(){
-  const c=$('#eqCanvas'),g=c.getContext('2d'),w=c.width,h=c.height,pad=16,mid=h/2;
+  const c=$('#eqCanvas'),ratio=Math.min(window.devicePixelRatio||1,2),rect=c.getBoundingClientRect(),cssW=Math.max(520,Math.round(rect.width)),cssH=Math.max(220,Math.round(rect.height));
+  if(c.width!==Math.round(cssW*ratio)||c.height!==Math.round(cssH*ratio)){c.width=Math.round(cssW*ratio);c.height=Math.round(cssH*ratio)}
+  const g=c.getContext('2d');g.setTransform(ratio,0,0,ratio,0,0);const w=cssW,h=cssH,pad=22,mid=h/2;
   g.clearRect(0,0,w,h);g.fillStyle='#0b0c12';g.fillRect(0,0,w,h);
   g.lineWidth=1;
   for(let i=0;i<=10;i++){const x=i*w/10;g.strokeStyle=i===0||i===10?'#242735':'#1c1f2b';g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke()}
@@ -53,6 +55,20 @@ function installGainControl(){
 }
 function syncGain(){const input=$('#eqGain'),out=$('#eqGainValue');if(!input)return;input.value=masterGain;input.style.setProperty('--gain',`${(masterGain+12)/24*100}%`);out.textContent=`${masterGain>0?'+':''}${masterGain} dB`}
 
+function installThreeColumnLayout(){
+  const layout=$('.eq-layout'),editor=$('.eq-editor'),library=$('.eq-list'),toolbar=$('.toolbar');
+  const device=document.createElement('aside');device.className='panel eq-device-panel';device.innerHTML=`<div class="eq-device-visual"><img src="assets/microphone.png" alt="Studio Mic X1"><span class="device-online"><i></i> 已连接</span></div><div class="device-info-title"><span class="eyebrow">DEVICE INFO</span><h2>设备信息</h2></div><dl class="eq-device-specs"><div><dt>设备型号</dt><dd>SMX-01</dd></div><div><dt>产品名称</dt><dd>Studio Mic X1</dd></div><div><dt>产品品牌</dt><dd>SonicLab</dd></div><div><dt>设备厂商</dt><dd>SonicLab Audio</dd></div><div><dt>固件版本</dt><dd>2.4.1</dd></div></dl><a class="ghost-btn eq-back" href="control.html">← 返回设备调试</a>`;
+  layout.prepend(device);library.classList.add('eq-library');
+  const head=document.createElement('div');head.className='eq-library-head';head.innerHTML=`<div><span class="eyebrow">EQ SOUNDS</span><h2>EQ 音效</h2></div><button class="library-share" id="libraryShare" title="分享当前 EQ">↗</button>`;
+  const tabs=document.createElement('div');tabs.className='eq-library-tabs';tabs.innerHTML='<button class="active">预设</button><button>自定义</button><button>在线</button><button>我的分享</button>';
+  library.prepend(tabs);library.prepend(toolbar);library.prepend(head);
+  toolbar.classList.add('library-toolbar');
+  $('#libraryShare').onclick=()=>$('#shareBtn').click();
+  const editorLabel=document.createElement('div');editorLabel.className='eq-workbench-label';editorLabel.innerHTML='<span class="eyebrow">PARAMETRIC EQUALIZER</span><strong>频段调节与曲线</strong>';
+  editor.prepend(editorLabel);
+  window.addEventListener('resize',()=>requestAnimationFrame(draw));
+}
+
 $('#eqSearch').oninput=renderList;$('#eqFilter').onchange=renderList;
 $('#newEq').onclick=()=>{const n={id:Date.now(),name:'未命名 EQ',author:'我',cat:'自定义',desc:'新的自定义均衡器预设',likes:0,fav:false,vals:Array(10).fill(0),gain:0};presets.unshift(n);select(n.id);toast('已新建 EQ')};
 $('#likeBtn').onclick=()=>{selected.likes++;$('#likeBtn').textContent=`♡ ${selected.likes}`;renderList()};
@@ -61,4 +77,4 @@ $('#shareBtn').onclick=async()=>{try{await navigator.clipboard.writeText(locatio
 $('#deleteBtn').onclick=()=>{if(selected.author!=='我')return toast('只能删除自己创建的 EQ');presets.splice(presets.indexOf(selected),1);select(presets[0]);toast('EQ 已删除')};
 $('#resetBtn').onclick=()=>{bands=Array(10).fill(0);masterGain=0;renderBands();syncGain();toast('预设已重置')};
 $('#saveBtn').onclick=()=>{selected.vals=[...bands];selected.gain=masterGain;toast('预设已保存')};
-installGainControl();renderList();renderBands();syncGain();
+installThreeColumnLayout();installGainControl();renderList();renderBands();syncGain();
